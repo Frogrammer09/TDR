@@ -90,66 +90,32 @@ def new_profile():
 
 
 def give_song(profile, viewed, genre_preferences):
-
-
     if len(viewed) >= len(df):
         return None
-
 
     distances, indices = nbrs.kneighbors(
         np.array(profile).reshape(1, -1),
         n_neighbors=len(df)
     )
+    distances, indices = distances[0], indices[0]
 
-
-    candidates = [
-        int(idx)
-        for idx in indices[0]
-        if int(idx) not in viewed
-    ]
-
-
-    if not candidates:
+    # Traiem les cançons ja vistes
+    mask = ~np.isin(indices, list(viewed))
+    indices, distances = indices[mask], distances[mask]
+    if len(indices) == 0:
         return None
 
+    generes_cand = df.loc[indices, 'track_genre'].values
 
-    # Penalitzem els gèneres que no agraden
-    scored_candidates = []
+    # Triem el gènere amb probabilitat proporcional a la preferència
+    generes = [g for g in genre_preferences if g in set(generes_cand)]
+    pesos = np.array([genre_preferences[g] for g in generes])
+    pesos = np.clip(pesos, 0.05, 0.95)   # sempre queda una mica d'exploració
+    genere = np.random.choice(generes, p=pesos / pesos.sum())
 
-
-    for idx in candidates:
-        genre = df.loc[idx, 'track_genre']
-
-
-        distance = distances[0][
-            np.where(indices[0] == idx)[0][0]
-        ]
-
-
-        preference = genre_preferences.get(genre, 0.5)
-
-
-        score = distance / np.sqrt(len(features)) + (1 - preference) * 0.15
-
-
-        scored_candidates.append((idx, score))
-
-
-    # Ordenem les cançons segons la puntuació final
-    scored_candidates.sort(key=lambda x: x[1])
-
-
-    top_candidates = scored_candidates[:10]
-
-
-    selected = np.random.choice(
-        [idx for idx, score in top_candidates]
-    )
-
-
-    return int(selected)
-
-
+    # Dins del gènere, una de les 10 més properes
+    sel = np.where(generes_cand == genere)[0][:10]
+    return int(indices[np.random.choice(sel)])
 
 
 def new_genre_preferences():
@@ -169,26 +135,20 @@ def puntua(profile, rating, song_idx, genre_preferences):
 
 
     # Actualitzem el perfil musical
-    lr = 0.4
     weight = (rating - 3) / 2
-
+    lr = 0.4 if weight > 0 else 0.15
 
     user_vector = user_vector + lr * weight * (
         song_vector - user_vector
     )
 
-
     # Actualitzem la preferència pel gènere
     genre = df.loc[song_idx, 'track_genre']
+    step = 0.25
 
-
-    genre_preferences[genre] += 0.10 * weight
-
-
-    genre_preferences[genre] = np.clip(
-        genre_preferences[genre], 0, 1
+    genre_preferences[genre] = float(
+        np.clip(genre_preferences[genre] + step * weight, 0, 1)
     )
-
 
     return np.clip(user_vector, 0, 1).tolist()
 
