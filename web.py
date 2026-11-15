@@ -2,14 +2,12 @@
 
 from functions import (initialize, new_profile, give_song, puntua,
                        print_data, get_spotify_link, get_embed_link,
-                       new_genre_preferences, install_libraries)
-
-install_libraries()
+                       new_genre_preferences)
 
 import streamlit as st
-import pandas as pd
 import base64
 import os
+import streamlit.components.v1 as components
 
 
 # Configuración de la página

@@ -1,27 +1,4 @@
 #FUNCIONS PER LA WEB
-import sys
-import subprocess
-import importlib.util
-
-REQUIRED_LIBRARIES = {
-    "numpy": "numpy",
-    "pandas": "pandas",
-    "sklearn": "scikit-learn",
-    "streamlit": "streamlit",
-}
-
-# ESTE CODIGO NO ES NUESTRO, HAY QUE PONER ESO EN EL INFORME
-def install_libraries():
-    for module, package in REQUIRED_LIBRARIES.items():
-        if importlib.util.find_spec(module) is None:
-            print(f"[Auto-Install] '{module}' no trobat. Instal·lant...")
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-                print(f"[OK] '{package}' instal·lat correctament.")
-            except subprocess.CalledProcessError:
-                raise RuntimeError(f"No s'ha pogut instal·lar '{package}'.")
-
-install_libraries() 
 
 import os
 import numpy as np
@@ -70,7 +47,9 @@ def initialize():
         'acousticness',
         'instrumentalness',
         'liveness',
-        'valence'
+        'valence',
+        'tempo',
+        'loudness'
     ]
 
 
